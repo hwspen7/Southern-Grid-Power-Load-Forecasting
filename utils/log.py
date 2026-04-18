@@ -12,13 +12,13 @@ class Logger(object):
         'critical': logging.CRITICAL
     }
 
-    def __init__(self, root_path, log_name, level='info', fmt='%{asctime}s - %(levelname)s - %(message)s)'):
+    def __init__(self, root_path, log_name, level='info', fmt='%(asctime)s - %(levelname)s - %(message)s'):
         """
         Initialize the logger.
         :param root_path: Root directory where logs will be stored
         :param log_name: Name of the log file (without extension)
         :param level: Logging level (default: 'info')
-        :param format: Log message format
+        :param fmt: Log message format
         """
         # Root path for log storage
         self.root_path = root_path
@@ -33,13 +33,19 @@ class Logger(object):
         self.logger = logging.getLogger(log_name)
 
         # Set logging level
-        self.logger.setLevel(self.level_relations.get(level))
+        self.logger.setLevel(self.level_relations.get(level, logging.INFO))
+
+        # Prevent duplicate logs from being added repeatedly
+        self.logger.propagate = False
 
     def get_logger(self):
         """
         Create and return a configured logger instance
         """
         # Create log directory if it does not exist
+        if self.logger.handlers:
+            return self.logger
+
         path = os.path.join(self.root_path, 'log')
         os.makedirs(path, exist_ok=True)
 

@@ -13,7 +13,6 @@ def data_preprocessing(path):
     """
 
     data = pd.read_csv(path)
-    data.info()
 
     # Format the time column
     data['time'] = pd.to_datetime(data['time']).dt.strftime("%Y-%m-%d %H:%M:%S")

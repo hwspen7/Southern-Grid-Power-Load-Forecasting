@@ -14,6 +14,13 @@ plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['font.size'] = 15
 
 class PowerLoadModel:
-    def __init__(self):
+    def __init__(self, data_path):
         logfile_name = 'train' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.logfile = Logger('../',logfile_name).get_logger()
+        self.logfile.info('Start creating model...')
+        self.data_source = data_preprocessing(data_path)
+
+if __name__ == '__main__':
+    power_load = PowerLoadModel(data_path=r'../data/train.csv')
+    print(power_load.data_source.head())
 
