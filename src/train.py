@@ -200,7 +200,7 @@ def model_train(data, features, logger):
     logger.info(f"Test set mean absolute error: {mae_test}")
 
     # Save the model
-    joblib.dump(xgb_estimator, '../model/xgb.pkl')
+    joblib.dump(best_xgb_model, '../model/xgb.pkl')
 
 
 if __name__ == '__main__':
