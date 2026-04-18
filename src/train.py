@@ -63,18 +63,18 @@ def analysis_data(ana_data):
     ana_data['weekday'] = ana_data['time'].apply(lambda x: pd.to_datetime(x).weekday())
     ana_data['workday']=ana_data['weekday'].apply(lambda x: 1 if x <= 4 else 0)
 
-    power_load_workday_avg = ana_data[ana_data['weekday'] == 1].power_load.mean()
-    power_load_weekendk_avg = ana_data[ana_data['weekday'] == 0].power_load.mean()
+    power_load_workday_avg = ana_data[ana_data['workday'] == 1]['power_load'].mean()
+    power_load_weekend_avg = ana_data[ana_data['workday'] == 0]['power_load'].mean()
 
     ax4.bar(x=['Average Weekday Load', 'Average Weekend Load'],
-            height=[power_load_workday_avg, power_load_weekendk_avg])
+            height=[power_load_workday_avg, power_load_weekend_avg])
     ax4.set_title('Comparison of Average Weekday Load and Weekend Load')
     ax4.set_xlabel('Weekdays')
     ax4.set_ylabel('Average Load (MW)')
 
     plt.savefig('../data/figures/power_load_analysis.png')
 
-def feature_engineering(ana_data):
+def feature_engineering(ana_data, logger):
     """
     Perform feature engineering on the input dataset and extract key features
 
@@ -86,6 +86,9 @@ def feature_engineering(ana_data):
 
     :param ana_data: Input dataset
     """
+
+    logger.info('--------- Start feature engineering ----------')
+
     feature_data = ana_data.copy(deep=True)
     feature_data['hour'] = feature_data['time'].str[11:13]
     feature_data['month'] = feature_data['time'].str[5:7]
@@ -120,20 +123,91 @@ def feature_engineering(ana_data):
 
     # Compute the same timestamp from yesterday
     feature_data['yesterday_time'] = feature_data['time'].apply(
-        lambda x:(pd.to_datetime(x) - pd.to_timedelta('1D')).strftime('%Y-%d %H:%M:%S')
+        lambda x: (pd.to_datetime(x) - pd.to_timedelta('1D')).strftime('%Y-%m-%d %H:%M:%S')
     )
+
     time_load_dict = feature_data.set_index('time')['power_load'].to_dict()
     feature_data['yesterday_load'] = feature_data['yesterday_time'].apply(lambda x: time_load_dict.get(x))
     feature_data.dropna(axis=0,inplace=True)
 
     feature_columns = list(hour_encoding.columns.append(month_encoding.columns)) +list(shift_data.columns) + ['yesterday_load']
-    print(feature_columns)
 
+    return feature_data, feature_columns
+
+
+def model_train(data, features, logger):
+    """
+    :param data: Input data after feature engineering
+    :param features: Feature column names
+    :param logger: Logger object
+    :return:
+    """
+
+    x_data = data[features]
+    y_data = data['power_load']
+
+    x_train, x_test, y_train, y_test = train_test_split(
+        x_data,
+        y_data,
+        test_size=0.3,
+        random_state=42
+    )
+
+    logger.info('---------- Grid Search + Cross Validation ----------')
+    logger.info(f"Start time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    # Grid Search and cross-validation
+    param_dict = {
+        'n_estimators': [50, 100, 150, 200, 250,300,350],
+        'max_depth':[3,4,5,6,7,8,9],
+        'learning_rate':[0.01, 0.1],
+    }
+
+    # Model training
+    xgb_estimator = XGBRegressor()
+    grid_search = GridSearchCV(xgb_estimator, param_grid=param_dict, cv=5)
+
+    grid_search.fit(x_train, y_train)
+
+    logger.info(f"Best parameters: {grid_search.best_params_}")
+    logger.info(f"Finish time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    # Model Evaluation
+    # Predictions on training set
+    y_pred_train = xgb_estimator.predict(x_train)
+
+    # Prediction on testing set
+    y_pred_test = xgb_estimator.predict(x_test)
+
+    # Training set MSE and MAE
+    mse_train = mean_squared_error(y_train, y_pred_train)
+    mae_train = mean_absolute_error(y_train, y_pred_train)
+    print(f'MSE: {mse_train}')
+    print(f'MAE: {mae_train}')
+
+    # Testing set MSE and MAE
+    mse_test = mean_squared_error(y_test, y_pred_test)
+    mae_test = mean_absolute_error(y_test, y_pred_test)
+    print(f'MSE: {mse_test}')
+    print(f'MAE: {mae_test}')
+
+    logger.info("========== Model Training Completed ==========")
+    logger.info(f"Training set mean squared error: {mse_train}")
+    logger.info(f"Training set mean absolute error: {mae_train}")
+    logger.info(f"Test set mean squared error: {mse_test}")
+    logger.info(f"Test set mean absolute error: {mae_test}")
+
+    # Save the model
+    joblib.dump(xgb_estimator, '../model/xgb.pkl')
 
 
 if __name__ == '__main__':
     power_load = PowerLoadModel(data_path=r'../data/train.csv')
 
     analysis_data(power_load.data_source)
-    feature_engineering(power_load.data_source)
+
+    feature_data,feature_columns = feature_engineering(power_load.data_source, power_load.logfile)
+
+    model_train(feature_data, feature_columns, logger=power_load.logfile)
+
 
