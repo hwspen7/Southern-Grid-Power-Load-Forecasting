@@ -1,5 +1,6 @@
 import os
 import logging
+import datetime
 
 class Logger(object):
     # Mapping between string levels and logging module levels
