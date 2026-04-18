@@ -73,7 +73,35 @@ def analysis_data(ana_data):
     ax4.set_ylabel('Average Load (MW)')
 
     plt.savefig('../data/figures/power_load_analysis.png')
-    fig.show()
+
+def feature_engineering(ana_data):
+    """
+    Perform feature engineering on the input dataset and extract key features
+
+    1. Extract time-related features: month and hour
+    2. Extract recent load features within a given window size
+    3. Extract the load value from the same time yesterday
+    4. Remove samples with missing values
+    5. Organize and return the feature columns
+
+    :param ana_data: Input dataset
+    """
+    feature_data = ana_data.copy(deep=True)
+    feature_data['hour'] = feature_data['time'].str[11:13]
+    feature_data['month'] = feature_data['time'].str[5:7]
+
+    '''
+    Use one-hot encoding to convert categorical time features (hour and month) into binary variables
+    so that the model can learn each category separately without assuming ordinal relationships
+    '''
+    hour_encoding = pd.get_dummies(feature_data['hour'])
+    hour_encoding.columns = ['hour_' + str(i) for i in hour_encoding.columns]
+
+    month_encoding = pd.get_dummies(feature_data['month'])
+    month_encoding.columns = ['month_' + str(i) for i in month_encoding.columns]
+
+    # Concatenate encoded features
+    feature_data = pd.concat([feature_data, hour_encoding, month_encoding], axis=1)
 
 
 if __name__ == '__main__':
