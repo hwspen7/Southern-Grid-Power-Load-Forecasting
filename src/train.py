@@ -10,8 +10,8 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 import joblib
 
-plt.rcParams['font.sans-serif'] = ['SimHei']
-plt.rcParams['font.size'] = 15
+plt.rcParams['font.family'] = 'Arial'
+plt.rcParams['axes.unicode_minus'] = False
 
 class PowerLoadModel:
     def __init__(self, data_path):
@@ -172,12 +172,14 @@ def model_train(data, features, logger):
     logger.info(f"Best parameters: {grid_search.best_params_}")
     logger.info(f"Finish time: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
+    best_xgb_model = grid_search.best_estimator_
+
     # Model Evaluation
     # Predictions on training set
-    y_pred_train = xgb_estimator.predict(x_train)
+    y_pred_train = best_xgb_model.predict(x_train)
 
     # Prediction on testing set
-    y_pred_test = xgb_estimator.predict(x_test)
+    y_pred_test = best_xgb_model.predict(x_test)
 
     # Training set MSE and MAE
     mse_train = mean_squared_error(y_train, y_pred_train)
