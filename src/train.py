@@ -103,9 +103,37 @@ def feature_engineering(ana_data):
     # Concatenate encoded features
     feature_data = pd.concat([feature_data, hour_encoding, month_encoding], axis=1)
 
+    # Extract recent load values within a fixed window
+
+    # load_1h_data = feature_data['power_load'].shift(1)
+    # load_2h_data = feature_data['power_load'].shift(2)
+    # load_3h_data = feature_data['power_load'].shift(3)
+    # load_shift_data = pd.concat([load_1h_data, load_2h_data, load_3h_data], axis=1)
+    # load_shift_data.columns = ['load_1h', 'load_2h', 'load_3h']
+    # feature_data = pd.concat([feature_data, load_shift_data], axis=1)
+
+    window_size = 3
+    shift_list = [feature_data['power_load'].shift(i) for i in range(1, window_size+1)]
+    shift_data = pd.concat(shift_list, axis=1)
+    shift_data.columns = ['previous_'+str(i) for i in range(1, window_size+1)]
+    feature_data = pd.concat([feature_data, shift_data], axis=1)
+
+    # Compute the same timestamp from yesterday
+    feature_data['yesterday_time'] = feature_data['time'].apply(
+        lambda x:(pd.to_datetime(x) - pd.to_timedelta('1D')).strftime('%Y-%d %H:%M:%S')
+    )
+    time_load_dict = feature_data.set_index('time')['power_load'].to_dict()
+    feature_data['yesterday_load'] = feature_data['yesterday_time'].apply(lambda x: time_load_dict.get(x))
+    feature_data.dropna(axis=0,inplace=True)
+
+    feature_columns = list(hour_encoding.columns.append(month_encoding.columns)) +list(shift_data.columns) + ['yesterday_load']
+    print(feature_columns)
+
+
 
 if __name__ == '__main__':
     power_load = PowerLoadModel(data_path=r'../data/train.csv')
 
     analysis_data(power_load.data_source)
+    feature_engineering(power_load.data_source)
 
