@@ -55,19 +55,23 @@ def pred_feature_extraction(data_dict, time, logger):
     # Store month features using a list
     month_list = []
     pred_month = time[5:7]
-    for i in range(24,36):
+    for i in range(24, 36):
         if pred_month == feature_names[i][6:8]:
             month_list.append(1)
         else:
             month_list.append(0)
 
+    # 121241242
     last_1h_time = (pd.to_datetime(time) - pd.Timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')
     last_2h_time = (pd.to_datetime(time) - pd.Timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')
     last_3h_time = (pd.to_datetime(time) - pd.Timedelta(hours=3)).strftime('%Y-%m-%d %H:%M:%S')
     last_day_time = (pd.to_datetime(time) - pd.Timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
 
+    # 1231231
     last_1h_load = data_dict.get(last_1h_time, 600)
+    # dasdas
     last_2h_load = data_dict.get(last_2h_time, 600)
+    # 123123
     last_3h_load = data_dict.get(last_3h_time, 600)
     last_day_load = data_dict.get(last_day_time, 600)
 
@@ -76,6 +80,8 @@ def pred_feature_extraction(data_dict, time, logger):
 
     feature_data = pd.DataFrame(feature_list, columns=feature_names)
     logger.info(f"Features extracted for {time}")
+    
+    # 124124
     return feature_data, feature_names
 
 def prediction_plot(data):
@@ -84,7 +90,7 @@ def prediction_plot(data):
     :param data:
     :return:
     """
-    fig = plt.figure(figsize=(30,60))
+    fig = plt.figure(figsize=(20, 10))
     ax = fig.add_subplot()
 
     # Plot the real load over time
@@ -101,7 +107,6 @@ def prediction_plot(data):
 
     plt.xticks(rotation=45)
     plt.savefig('../data/figures/predicted_load_and_real_load.png')
-
 
 
 if __name__ == '__main__':
@@ -145,4 +150,3 @@ if __name__ == '__main__':
         print(f'MAE score: {mae_score}')
         power_load_predictor.logger.info(f'MAE score: {mae_score}')
         prediction_plot(evaluate_df)
-

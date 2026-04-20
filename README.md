@@ -1,6 +1,20 @@
-# Southern Grid Power Load Forecasting
+# Southern Grid Power Load Forecasting (XGBoost)
 
-This project focus on short-term power load forecasting based on historical electricity load data from the southern power grid. The main goal is to predict the electricity load for the next hour by using machine methods, especially the XGBoost model.
+This project focuses on short-term power load forecasting based on historical electricity load data collected from the southern power grid. It aims to predict the electricity load for the next hour using machine learning techniques, with XGBoost serving as the main forecasting model.
+
+## Project Structure
+
+## Feature Engineering
+
+## Model
+
+## Prediction Workflow
+
+## Evaluation
+
+## Visualization
+
+## How to Run
 
 
 
