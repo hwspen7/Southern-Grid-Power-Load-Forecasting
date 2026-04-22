@@ -94,7 +94,7 @@ The dataset shows clear temporal patterns:
 
 ### Prediction vs Real Load
 
-![Prediction vs Real Load](../../Typora/images/predicted_load_and_real_load-6890907.png)
+![Load Distribution](data/figures/predicted_load_and_real_load.png)
 
 The model is able to follow the overall trend and periodic patterns closely. It performs well in most time periods and captures daily fluctuations effectively.
 
