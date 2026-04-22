@@ -83,7 +83,7 @@ Given that the load values typically range from approximately 700 to 1400, the r
 
 ### Load Distribution & Temporal Patterns
 
-![power_load_analysis](../../Typora/images/power_load_analysis.png)
+![Load Distribution](data/figures/power_load_analysis.png)
 
 The dataset shows clear temporal patterns:
 
@@ -94,7 +94,7 @@ The dataset shows clear temporal patterns:
 
 ### Prediction vs Real Load
 
-![predicted_load_and_real_load](../../Typora/images/predicted_load_and_real_load.png)
+![Prediction vs Real Load](../../Typora/images/predicted_load_and_real_load-6890907.png)
 
 The model is able to follow the overall trend and periodic patterns closely. It performs well in most time periods and captures daily fluctuations effectively.
 
