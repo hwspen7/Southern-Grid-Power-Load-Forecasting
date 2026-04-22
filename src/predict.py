@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 from utils.log import Logger
 from utils.common import data_preprocessing
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import matplotlib.ticker as mick
 import joblib
 import matplotlib.pyplot as plt
@@ -61,17 +61,13 @@ def pred_feature_extraction(data_dict, time, logger):
         else:
             month_list.append(0)
 
-    # 121241242
     last_1h_time = (pd.to_datetime(time) - pd.Timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')
     last_2h_time = (pd.to_datetime(time) - pd.Timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')
     last_3h_time = (pd.to_datetime(time) - pd.Timedelta(hours=3)).strftime('%Y-%m-%d %H:%M:%S')
     last_day_time = (pd.to_datetime(time) - pd.Timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
 
-    # 1231231
     last_1h_load = data_dict.get(last_1h_time, 600)
-    # dasdas
     last_2h_load = data_dict.get(last_2h_time, 600)
-    # 123123
     last_3h_load = data_dict.get(last_3h_time, 600)
     last_day_load = data_dict.get(last_day_time, 600)
 
@@ -80,8 +76,7 @@ def pred_feature_extraction(data_dict, time, logger):
 
     feature_data = pd.DataFrame(feature_list, columns=feature_names)
     logger.info(f"Features extracted for {time}")
-    
-    # 124124
+
     return feature_data, feature_names
 
 def prediction_plot(data):
@@ -146,7 +141,30 @@ if __name__ == '__main__':
     if evaluate_df.empty:
         print("evaluate_df is empty")
     else:
-        mae_score = mean_absolute_error(evaluate_df['Real Value'], evaluate_df['Predicted Value'])
-        print(f'MAE score: {mae_score}')
-        power_load_predictor.logger.info(f'MAE score: {mae_score}')
+        y_true = evaluate_df['Real Value']
+        y_pred = evaluate_df['Predicted Value']
+
+        mae_score = mean_absolute_error(y_true, y_pred)
+        rmse_score = np.sqrt(mean_squared_error(y_true, y_pred))
+        r2 = r2_score(y_true, y_pred)
+
+        # Avoid division by zero when calculating MAPE
+        nonzero_mask = y_true != 0
+        if nonzero_mask.sum() > 0:
+            mape_score = np.mean(
+                np.abs((y_true[nonzero_mask] - y_pred[nonzero_mask]) / y_true[nonzero_mask])
+            ) * 100
+        else:
+            mape_score = np.nan
+
+        print(f'MAE Score: {mae_score}')
+        print(f'RMSE Score: {rmse_score}')
+        print(f'R2 Score: {r2}')
+        print(f'MAPE Score: {mape_score}')
+
+        power_load_predictor.logger.info(f'MAE Score: {mae_score}')
+        power_load_predictor.logger.info(f'RMSE Score: {rmse_score}')
+        power_load_predictor.logger.info(f'R2 Score: {r2}')
+        power_load_predictor.logger.info(f'MAPE Score: {mape_score}')
+
         prediction_plot(evaluate_df)
